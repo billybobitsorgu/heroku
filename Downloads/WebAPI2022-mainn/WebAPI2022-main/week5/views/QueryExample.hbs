@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Example</title>
+    <style>
+        textarea{
+            width: 500px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rest API Demo</h1>
+    
+    <p>Verb/HTTP Method:</p>
+    <select name="verb">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="DELETE">DELETE</option>
+    </select>
+    <br>
+    <br>
+    <p>Resource Query</p>
+    <br>
+    <input name="resource" value="reviews/">
+    <br>
+    <br>
+    <p>Data (optional)</p>
+    <br>
+    Author <input type="text" name="author" value="">
+    <br>
+    Rating <input type="text" name="rating" placeholder="5" list="ratings">
+    <br>
+    Review <input type="text" name="reviewText">
+    <br>
+    <br>
+    <button>Make Request</button>
+    <hr>
+    <h2>Results</h2>
+    <input type="text" name="query" readonly size="70">
+    <br>
+    <textarea name="results" readonly></textarea>
+
+    <datalist id="ratings">
+        <option value="1"></option>
+        <option value="2"></option>
+        <option value="3"></option>
+        <option value="4"></option>
+        <option value="5"></option>
+    </datalist>
+    <script>
+        var callBtn = document.querySelector('button')
+        callBtn.addEventListener('click', makeCall)
+
+        function makeCall(){
+            var data = {
+                'author':document.querySelector('input[name="author"]').value,
+                'rating':document.querySelector('input[name="rating"]').value,
+                'reviewText':document.querySelector('input[name="reviewText"]').value
+            }
+            console.log(data)
+            var verbfield = document.querySelector('select[name="verb"]')
+            var verb = verbfield.options[verbfield.selectedIndex].value
+            var rescource = document.querySelector('input[name="resource"]').value
+            var results = document.querySelector('textarea[name="results"]')
+            var url = `http://localhost:3000/api/v1/${rescource}`
+
+            document.querySelector('input[name="query"]').value = url
+
+            var myHeaders = new Headers()
+            myHeaders.set('Content-Type', 'application/json')
+
+            var myInit = {
+                method:verb,
+                headers:myHeaders,
+                mode:'cors',
+                cache:'default'
+            }
+
+            //puts post in the request
+            if(['POST','PUT'].indexOf(verb)>-1){
+
+                myInit.body = JSON.stringify(data)
+                console.log(myInit)
+            }
+
+            var myrequest = new Request(url, myInit)
+
+            fetch(myrequest).then(function(response){
+                console.log(response)
+                var contentType = response.headers.get('content-type')
+
+                if(contentType && contentType.includes('application/json')){
+                    return response.text()
+                }
+                if(response.status === 204){
+                    return 'Delete'
+                }
+                throw new TypeError("This is not JSON")
+            }).then(function(jsonText){
+                results.value = jsonText
+            }).catch(function(err){
+                console.log(err)
+            })
+        }
+    </script>
+</body>
+</html>
